@@ -1,0 +1,14 @@
+# Chance that the current Nether state toggles during each daily roll.
+chance-percent: 15
+
+# Used only the first time the plugin starts and no state.yml exists.
+default-open: true
+
+# One real-world roll is made at or after this time each calendar day.
+daily-time: "00:00"
+time-zone: "America/New_York"
+
+# Chat behavior.
+announce-on-player-join: true
+startup-announcement-delay-seconds: 15
+roll-reveal-delay-seconds: 5

@@ -1,0 +1,9 @@
+.gradle/
+build/
+dist/
+.idea/
+*.iml
+
+# Private, server-specific deployment helpers are not part of the public repo.
+build-on-rinc.sh
+install-on-rinc.sh

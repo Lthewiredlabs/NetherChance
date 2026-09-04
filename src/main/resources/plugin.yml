@@ -1,0 +1,20 @@
+name: NetherChance
+version: '1.0.0'
+main: io.github.lthewiredlabs.netherchance.NetherChancePlugin
+description: Gives the Nether a daily chance to open or close.
+authors: [Lthewiredlabs]
+api-version: '26.2'
+
+commands:
+  netherchance:
+    description: View or administer Nether Chance.
+    usage: /netherchance [status|open|close|roll|reload]
+    aliases: [nchance]
+
+permissions:
+  netherchance.status:
+    description: View the current Nether Chance state.
+    default: true
+  netherchance.admin:
+    description: Open, close, roll, or reload Nether Chance.
+    default: op
