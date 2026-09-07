@@ -1,5 +1,5 @@
 name: NetherChance
-version: '1.0.0'
+version: '1.1'
 main: io.github.lthewiredlabs.netherchance.NetherChancePlugin
 description: Gives the Nether a daily chance to open or close.
 authors: [Lthewiredlabs]

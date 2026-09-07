@@ -30,6 +30,13 @@ public final class NetherChancePolicyTest {
                 yesterday,
                 LocalTime.of(18, 0));
 
+        assert !NetherChancePolicy.shouldBlockTeleport(true, false, true);
+        assert !NetherChancePolicy.shouldBlockTeleport(true, true, false);
+        assert NetherChancePolicy.shouldBlockTeleport(false, false, true);
+        assert NetherChancePolicy.shouldBlockTeleport(false, true, false);
+        assert !NetherChancePolicy.shouldBlockTeleport(false, false, false);
+        assert !NetherChancePolicy.shouldBlockTeleport(false, true, true);
+
         expectIllegalArgument(() -> NetherChancePolicy.shouldToggle(0, 15));
         expectIllegalArgument(() -> NetherChancePolicy.shouldToggle(101, 15));
         expectIllegalArgument(() -> NetherChancePolicy.shouldToggle(50, -1));

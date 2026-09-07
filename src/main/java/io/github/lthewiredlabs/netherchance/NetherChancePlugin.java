@@ -193,17 +193,40 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerPortal(PlayerPortalEvent event) {
-        if (netherOpen || event.getCause() != PlayerTeleportEvent.TeleportCause.NETHER_PORTAL) {
+        enforcePlayerBoundary(event);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerTeleport(PlayerTeleportEvent event) {
+        enforcePlayerBoundary(event);
+    }
+
+    private void enforcePlayerBoundary(PlayerTeleportEvent event) {
+        if (netherOpen) {
             return;
         }
+        Location destination = event.getTo();
         World fromWorld = event.getFrom().getWorld();
+        World destinationWorld = destination == null ? null : destination.getWorld();
+        if (fromWorld == null || destinationWorld == null) {
+            return;
+        }
+
+        boolean startsInNether = fromWorld.getEnvironment() == World.Environment.NETHER;
+        boolean endsInNether = destinationWorld.getEnvironment() == World.Environment.NETHER;
+        if (!NetherChancePolicy.shouldBlockTeleport(netherOpen, startsInNether, endsInNether)) {
+            return;
+        }
+
         event.setCancelled(true);
-        if (fromWorld != null && fromWorld.getEnvironment() == World.Environment.NETHER) {
+        if (startsInNether) {
             event.getPlayer().sendMessage(prefixed(Component.text(
-                    "The Nether gates are closed. You are trapped here until they reopen.", NamedTextColor.RED)));
+                    "Teleport blocked: The Nether gates are closed. You are trapped here until they reopen.",
+                    NamedTextColor.RED)));
         } else {
             event.getPlayer().sendMessage(prefixed(Component.text(
-                    "The Nether gates are closed. Nobody may enter until they reopen.", NamedTextColor.RED)));
+                    "Teleport blocked: The Nether gates are closed. Nobody may enter until they reopen.",
+                    NamedTextColor.RED)));
         }
     }
 
@@ -217,7 +240,7 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
         World destinationWorld = destination == null ? null : destination.getWorld();
         boolean startsInNether = fromWorld != null && fromWorld.getEnvironment() == World.Environment.NETHER;
         boolean endsInNether = destinationWorld != null && destinationWorld.getEnvironment() == World.Environment.NETHER;
-        if (startsInNether || endsInNether) {
+        if (NetherChancePolicy.shouldBlockTeleport(netherOpen, startsInNether, endsInNether)) {
             event.setCancelled(true);
         }
     }
