@@ -1,151 +1,71 @@
-# Nether Chance
+# NetherChance
 
-Nether Chance is a Paper plugin that turns Nether access into a persistent
-daily event. It makes one real-world roll per calendar day:
+A Paper plugin that makes Nether access unpredictable. Once a day, the server rolls to decide whether the gates stay as they are or switch between open and closed.
 
-- If the Nether is open, a successful roll closes it.
-- If the Nether is closed, a successful roll opens it.
-- The daily toggle chance is 15% by default.
-- A failed roll leaves the current state unchanged.
-- Closing the Nether blocks every player teleport across its boundary in both
-  directions, including portals and commands such as `/home`, `/spawn`,
-  `/back`, and `/tpa`.
-- Homes and teleports that remain entirely inside the same dimension still work.
-- Entity portal travel across the Nether boundary is also blocked.
-- Players already in the Nether remain trapped there until it reopens.
+[Download the latest release](https://github.com/Lthewiredlabs/NetherChance/releases/latest) · [Default configuration](src/main/resources/config.yml)
 
-The plugin announces startup, the beginning of each daily roll, and the result
-in Minecraft chat. Players also receive the current state when they join.
+## How it works
 
-## Gate transition effects
+By default, the roll happens at midnight in `America/New_York`, with a **15% chance to change the current state**. An open Nether can close, and a closed Nether can open. Otherwise, nothing changes. The state and last roll date are saved, so restarting the server doesn't give it another roll that day.
 
-Version 1.2 adds effects whenever the gates actually open or close, including
-operator changes through `/netherchance open` and `/netherchance close`:
+**Closed gates block portal travel and teleports in both directions.** Commands such as `/home`, `/spawn`, `/back`, and `/tpa` can't carry players across the Nether boundary. Teleports that stay on the same side of that boundary aren't blocked.
 
-- Each opening chooses a random phrase from the four bundled opening messages;
-  each closing chooses from a separate pool of four closing messages. The last
-  choice from each pool is saved, so the next opening or closing avoids repeating
-  its previous phrase, including after a restart.
-- Players in every dimension receive the transition message and a sound cue:
-  thunder on opening and a low portal sound on closing. Opening also creates
-  cosmetic lightning near players in the selected Overworld worlds without
-  dealing damage, starting fires, or triggering lightning-rod and copper
-  mechanics.
-- Opening starts a 15-minute rainstorm in the selected Overworld worlds, with
-  snow in snowy biomes. Natural thunder is disabled during this storm.
-- Closing clears rain and thunder in those worlds and keeps the weather clear
-  for 60 seconds before normal weather can resume.
+Opening the gates brings cosmetic lightning and a 15-minute Overworld rainstorm. Closing them clears rain and thunder, followed by a short clear-weather period. The lightning doesn't damage players, start fires, or affect copper and lightning rods.
 
-Effects happen only when the state changes. A roll that leaves the gates in
-their existing state still reports its result without transition effects.
-Startup, configuration reload, and an operator command that requests the
-existing state do not trigger them.
+Each opening or closing picks from its own set of four phrases, avoiding the previous choice when possible. Players hear a sound cue and see the announcement in every dimension. These effects only happen when the gates actually change. Startup and reload don't replay them, though starting the server after a missed daily roll will still run that roll.
 
-## Requirements
+## Install
 
-- Paper 26.2
-- Java 25
-- Gradle 9.1 or newer when building from source
+Requires **Paper 26.2** and **Java 25**.
 
-## Installation
+1. Download `NetherChance-1.2.jar` from the [release page](https://github.com/Lthewiredlabs/NetherChance/releases/tag/v1.2).
+2. Stop the server and put the JAR in `plugins/`. If you're upgrading, remove the old NetherChance JAR so there's only one copy.
+3. Start the server. The log should show `NetherChance v1.2` enabling.
 
-1. Build the plugin with `gradle build`.
-2. Stop the Minecraft server.
-3. Copy `build/libs/NetherChance-1.2.jar` into the server's `plugins` folder.
-4. Start the server and confirm `NetherChance v1.2` enables in the log.
-
-Never replace a plugin JAR while Paper is running.
+Keep the `plugins/NetherChance/` folder when upgrading. It holds your settings and saved gate state.
 
 ## Commands
 
-- `/netherchance` or `/netherchance status` - show the current state and schedule
-- `/netherchance open` - force the Nether open (operators)
-- `/netherchance close` - force the Nether closed (operators)
-- `/netherchance roll` - run an extra roll without consuming the daily roll (operators)
-- `/netherchance reload` - reload configuration (operators)
+Use `/netherchance` or the shorter `/nchance`.
 
-Alias: `/nchance`
+| Command | What it does |
+| --- | --- |
+| `/nchance status` | Shows the current state and daily schedule. Also the default when no command is given. |
+| `/nchance open` | Opens the gates. |
+| `/nchance close` | Closes the gates. |
+| `/nchance roll` | Makes an extra roll without using up the daily one. |
+| `/nchance reload` | Reloads the configuration. |
 
-## State and schedule
+Status is available to everyone by default. The other commands require operator status or the `netherchance.admin` permission.
 
-Runtime configuration is stored in `plugins/NetherChance/config.yml`. Persistent
-state is stored in `plugins/NetherChance/state.yml`, including the date of the
-last completed daily roll so a server restart cannot cause extra daily rolls.
-The most recently selected opening and closing phrases are also persisted.
+## Configuration
 
-The default schedule is midnight in `America/New_York`. The chance, schedule,
-timezone, startup delay, reveal delay, and join announcement can all be changed
-in `config.yml`.
+Edit `plugins/NetherChance/config.yml`, then run `/nchance reload`. The [default config](src/main/resources/config.yml) includes all settings and comments. Older config files use the defaults for any new settings they don't contain.
 
-## Transition settings
+| Setting | Default |
+| --- | --- |
+| `chance-percent` | `15` |
+| `daily-time` | `"00:00"` |
+| `time-zone` | `"America/New_York"` |
+| `messages.opening` / `messages.closing` | Four phrases in each list; replace them with your own if you like. |
+| `effects.weather.open-duration-seconds` | `900` (15 minutes) |
+| `effects.worlds` | `[]` — all loaded Overworld worlds, or a list of specific world names. |
+| `effects.weather.enabled` | `true` |
+| `effects.lightning.enabled` | `true` |
+| `effects.sounds.enabled` | `true` |
 
-The bundled `config.yml` contains these settings. Existing configuration files
-that omit the new settings use the bundled defaults.
+Weather follows Minecraft's normal rules: sleeping, commands, and other plugins can end the storm early, and disabling the weather cycle pauses its timer. To silence the effects entirely, turn off both lightning and sounds; lightning bolts have their own thunder sound.
 
-| Setting | Default | Behavior |
-| --- | --- | --- |
-| `messages.opening` | Four opening phrases | Random message pool when the gates open. |
-| `messages.closing` | Four closing phrases | Separate random message pool when the gates close. |
-| `effects.worlds` | `[]` | Empty means every loaded Overworld (`NORMAL`) world; otherwise list the Overworld world names for weather and lightning. |
-| `effects.weather.enabled` | `true` | Enable opening rainstorms and closing weather clearing in the selected worlds. |
-| `effects.weather.open-duration-seconds` | `900` | Length of the opening rainstorm, limited to 1–86400 seconds. |
-| `effects.lightning.enabled` | `true` | Show cosmetic lightning on opening near players in the selected worlds. |
-| `effects.sounds.enabled` | `true` | Play added opening and closing sound cues to players in all dimensions. |
+## Building
 
-The world list controls weather and lightning. Transition messages and the
-added sound cue reach players in all dimensions. Minecraft also plays its own
-sound for a lightning bolt; to silence the event, disable both lightning and
-sounds. Reload changed settings with `/netherchance reload`; reloading does
-not replay transition effects.
+Use Java 25 and Gradle 9.1 or newer:
 
-Weather durations are measured in server ticks (20 ticks per configured second)
-and follow Minecraft's weather cycle; the weather is not locked for a wall-clock
-duration. Disabling that cycle pauses the weather timer, and sleeping,
-administrator commands, or other plugins can change the weather before the
-timer ends.
-
-## Build and test
-
-```text
+```sh
 gradle clean check build
 ```
 
-The dependency-free policy tests verify the exact 15% boundary and the
-once-per-calendar-day scheduling rule. Phrase tests cover separate message
-pools, non-repeating selection, remembered choices, and configuration fallback.
-Atmosphere tests use an in-memory server double to check weather timing and
-clearing, world selection, configuration switches, cross-dimension sound
-delivery, and lightning placement limited to occupied, loaded chunks.
-
-### Manual gameplay validation
-
-Build checks do not verify the in-game presentation or other plugins' teleport
-behavior. Before deployment, use a separate Paper test server to check:
-
-1. Open closed gates and close open gates with players in the Overworld and
-   Nether. Check the phrase and opening/closing sound cues in both dimensions,
-   plus opening lightning near players in the selected Overworld worlds.
-   Confirm that the lightning causes no damage, fire, or lightning-rod/copper
-   changes.
-2. Confirm that opening starts rain only in the selected Overworld worlds for
-   the configured duration, with natural thunder disabled. Confirm that closing
-   clears rain and thunder, provides a 60-second clear window, and then allows
-   normal weather again.
-3. Repeat a command for the current state, produce a roll with no state change,
-   reload configuration, and restart with no daily roll due. None should replay
-   transition effects.
-4. Alternate opening and closing several times, including across a restart.
-   Consecutive openings must use different opening phrases, and consecutive
-   closings must use different closing phrases when their pools have multiple
-   choices.
-5. Test each effect switch and the weather world list. With gates closed, check
-   portals and `/home`, `/spawn`, `/back`, and `/tpa` across the Nether boundary
-   in both directions; check that same-dimension teleports still work and that
-   cross-boundary travel resumes when the gates open.
-
-These checks are a validation checklist, not a claim that version 1.2 has been
-tested in-game or installed on a live server.
+The JAR is written to `build/libs/NetherChance-1.2.jar`. See [testing notes](docs/testing.md) for the automated checks and gameplay checklist.
 
 ## License
 
-Nether Chance is available under the MIT License.
+[MIT](LICENSE)
