@@ -22,7 +22,7 @@ Use a separate Paper server with players in the Overworld and Nether.
 
 - Open and close the gates. Check that everyone receives the right phrase and sound. Opening should produce cosmetic lightning near Overworld players, without damage, fire, or changes to copper and lightning rods.
 - Check the opening storm's duration and world selection. Closing during a storm should clear rain and thunder immediately, with 60 seconds of clear weather before the normal cycle resumes.
-- Repeat a command for the current state, reload the config, and restart when no daily roll is due. None should replay the effects. A roll that leaves the state unchanged should only announce its result.
+- Repeat a command for the current state, reload the config, and restart when no daily roll is due. None should replay the effects. A roll that leaves the state unchanged should not trigger transition effects.
 - Alternate opening and closing, including across a restart. Each pool should avoid its previous phrase when it has more than one distinct choice.
 - Try the effect switches and a custom world list. Weather and lightning should stay out of the Nether and End. Added sound cues should still reach players there.
 - With the gates closed, check portals and `/home`, `/spawn`, `/back`, and `/tpa` in both directions across the Nether boundary. Same-dimension teleports should still work. Reopen the gates and check that travel resumes.
