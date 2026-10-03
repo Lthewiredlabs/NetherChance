@@ -44,6 +44,11 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
     private boolean netherOpen;
     private LocalDate lastDailyRoll;
     private boolean rollInProgress;
+    private NetherAtmosphere atmosphere;
+    private List<String> openingPhrases;
+    private List<String> closingPhrases;
+    private String lastOpeningPhrase;
+    private String lastClosingPhrase;
 
     private int chancePercent;
     private LocalTime dailyTime;
@@ -55,6 +60,7 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        atmosphere = new NetherAtmosphere(this);
         loadSettings();
         loadState();
 
@@ -82,6 +88,9 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
 
     private void loadSettings() {
         reloadConfig();
+        openingPhrases = NetherPhrases.prepare(getConfig().getStringList("messages.opening"), NetherPhrases.OPENING);
+        closingPhrases = NetherPhrases.prepare(getConfig().getStringList("messages.closing"), NetherPhrases.CLOSING);
+        atmosphere.reload();
         chancePercent = clamp(getConfig().getInt("chance-percent", 15), 0, 100);
         announceOnJoin = getConfig().getBoolean("announce-on-player-join", true);
         startupDelayTicks = secondsToTicks(getConfig().getLong("startup-announcement-delay-seconds", 15L));
@@ -108,6 +117,8 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
         stateFile = new File(getDataFolder(), "state.yml");
         stateConfig = YamlConfiguration.loadConfiguration(stateFile);
         netherOpen = stateConfig.getBoolean("nether-open", getConfig().getBoolean("default-open", true));
+        lastOpeningPhrase = stateConfig.getString("last-opening-phrase");
+        lastClosingPhrase = stateConfig.getString("last-closing-phrase");
 
         String storedDate = stateConfig.getString("last-daily-roll");
         if (storedDate != null && !storedDate.isBlank()) {
@@ -126,6 +137,8 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
         }
         stateConfig.set("nether-open", netherOpen);
         stateConfig.set("last-daily-roll", lastDailyRoll == null ? null : lastDailyRoll.toString());
+        stateConfig.set("last-opening-phrase", lastOpeningPhrase);
+        stateConfig.set("last-closing-phrase", lastClosingPhrase);
         try {
             stateConfig.save(stateFile);
         } catch (IOException error) {
@@ -155,7 +168,7 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
             return;
         }
         rollInProgress = true;
-        broadcast(Component.text("The daily Nether roll has begun... ", NamedTextColor.LIGHT_PURPLE)
+        broadcast(Component.text(daily ? "The daily Nether roll has begun... " : "An extra Nether roll has begun... ", NamedTextColor.LIGHT_PURPLE)
                 .decorate(TextDecoration.BOLD)
                 .append(Component.text("There is a " + chancePercent
                         + "% chance the gates will change.", NamedTextColor.YELLOW)));
@@ -166,26 +179,15 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
     private void completeRoll(LocalDate rollDate, boolean daily) {
         int roll = ThreadLocalRandom.current().nextInt(1, 101);
         boolean toggled = NetherChancePolicy.shouldToggle(roll, chancePercent);
-        if (toggled) {
-            netherOpen = !netherOpen;
-        }
         if (daily) {
             lastDailyRoll = rollDate;
         }
         rollInProgress = false;
-        saveState();
 
-        if (toggled && netherOpen) {
-            broadcast(Component.text("Roll: " + roll + "/100 — ", NamedTextColor.YELLOW)
-                    .append(Component.text("THE NETHER GATES HAVE OPENED!", NamedTextColor.GREEN)
-                            .decorate(TextDecoration.BOLD))
-                    .append(Component.text(" Portals now work.", NamedTextColor.GRAY)));
-        } else if (toggled) {
-            broadcast(Component.text("Roll: " + roll + "/100 — ", NamedTextColor.YELLOW)
-                    .append(Component.text("THE NETHER GATES HAVE CLOSED!", NamedTextColor.RED)
-                            .decorate(TextDecoration.BOLD))
-                    .append(Component.text(" No entry or exit until the gates reopen.", NamedTextColor.GRAY)));
+        if (toggled) {
+            changeState(!netherOpen, Component.text("Roll: " + roll + "/100 — ", NamedTextColor.YELLOW));
         } else {
+            saveState();
             broadcast(Component.text("Roll: " + roll + "/100 — ", NamedTextColor.YELLOW)
                     .append(Component.text("The Nether remains " + stateWord() + ".", stateColor())));
         }
@@ -293,10 +295,27 @@ public final class NetherChancePlugin extends JavaPlugin implements Listener, Ta
                     "The Nether is already " + stateWord() + ".", stateColor())));
             return;
         }
+        changeState(open, Component.text(sender.getName() + " changed the gates — ", NamedTextColor.YELLOW));
+    }
+
+    private void changeState(boolean open, Component context) {
+        if (netherOpen == open) {
+            return;
+        }
         netherOpen = open;
+        String phrase;
+        if (open) {
+            phrase = NetherPhrases.choose(openingPhrases, lastOpeningPhrase, ThreadLocalRandom.current());
+            lastOpeningPhrase = phrase;
+        } else {
+            phrase = NetherPhrases.choose(closingPhrases, lastClosingPhrase, ThreadLocalRandom.current());
+            lastClosingPhrase = phrase;
+        }
         saveState();
-        broadcast(Component.text(sender.getName() + " has forced the Nether gates " + stateWord() + ".", stateColor())
-                .decorate(TextDecoration.BOLD));
+        broadcast(context.append(Component.text(open ? "THE NETHER GATES HAVE OPENED! " : "THE NETHER GATES HAVE CLOSED! ", stateColor())
+                        .decorate(TextDecoration.BOLD))
+                .append(Component.text(phrase, NamedTextColor.GRAY)));
+        atmosphere.onTransition(open);
     }
 
     private void sendStatus(CommandSender sender) {

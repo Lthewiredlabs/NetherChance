@@ -12,3 +12,35 @@ time-zone: "America/New_York"
 announce-on-player-join: true
 startup-announcement-delay-seconds: 15
 roll-reveal-delay-seconds: 5
+
+# One phrase is chosen on each actual opening/closing. The previous phrase from
+# that same pool is avoided when possible, including after a server restart.
+# Empty or blank-only pools fall back to these bundled defaults.
+messages:
+  opening:
+    - "The veil tears open. The Nether awaits."
+    - "Thunder breaks the silence. The Nether gates are open."
+    - "Something stirs beyond the storm. Passage to the Nether is granted."
+    - "The skies darken as the gates awaken. Enter… while you can."
+  closing:
+    - "The skies clear. The gates seal. Those within must wait."
+    - "The passage is severed. The Nether keeps those who remain."
+    - "The storm retreats, and the gates fall silent. No entry. No escape."
+    - "The veil closes once more. Those beyond it must await their fate."
+
+effects:
+  # Empty means all loaded Overworld/NORMAL worlds. Otherwise list world names.
+  # Nether and End worlds never receive weather or lightning effects.
+  worlds: []
+  weather:
+    enabled: true
+    # 15 minutes of server ticks; range 1–86400 seconds. Normal weather resumes
+    # afterward. Sleeping, commands, or another plugin can change it sooner.
+    open-duration-seconds: 900
+  lightning:
+    # Cosmetic vanilla lightning on opening, near players in selected worlds.
+    # Bolts include native thunder. Disable this AND sounds for silent events.
+    enabled: true
+  sounds:
+    # Additional opening/closing cues for all online players, including Nether.
+    enabled: true
