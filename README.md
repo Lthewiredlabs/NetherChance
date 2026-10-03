@@ -2,7 +2,7 @@
 
 A Paper plugin that makes Nether access unpredictable. Once a day, the server rolls to decide whether the gates stay as they are or switch between open and closed.
 
-[Download the latest release](https://github.com/Lthewiredlabs/NetherChance/releases/latest) · [Default configuration](src/main/resources/config.yml)
+[Download](https://github.com/Lthewiredlabs/NetherChance/releases/latest) · [What's new in 1.2](#whats-new-in-12) · [Install](#install) · [Basic commands](#basic-commands) · [Configuration](#configuration)
 
 ## How it works
 
@@ -10,9 +10,18 @@ By default, the roll happens at midnight in `America/New_York`, with a **15% cha
 
 **Closed gates block portal travel and teleports in both directions.** Commands such as `/home`, `/spawn`, `/back`, and `/tpa` can't carry players across the Nether boundary. Teleports that stay on the same side of that boundary aren't blocked.
 
-Opening the gates brings cosmetic lightning and a 15-minute Overworld rainstorm. Closing them clears rain and thunder, followed by a short clear-weather period. The lightning doesn't damage players, start fires, or affect copper and lightning rods.
+## What's new in 1.2
 
-Each opening or closing picks from its own set of four phrases, avoiding the previous choice when possible. Players hear a sound cue and see the announcement in every dimension. These effects only happen when the gates actually change. Startup and reload don't replay them, though starting the server after a missed daily roll will still run that roll.
+Gate changes now have their own announcements, weather, and sounds:
+
+- **Random phrases:** four opening messages and four closing messages. Each set avoids its last choice when possible, and remembers it across restarts.
+- **Opening storm:** cosmetic lightning near Overworld players, followed by 15 minutes of rain. The lightning doesn't damage players, start fires, or affect copper and lightning rods.
+- **Clear skies on closing:** rain and thunder stop, with 60 seconds of clear weather before the normal cycle resumes.
+- **Sound cues:** thunder when the gates open and a low portal sound when they close. Players in every dimension receive the announcement and sound, including those in the Nether.
+
+You can change the phrases, storm duration, affected worlds, and effect switches in the [configuration](#configuration).
+
+The effects also work with the manual open and close commands. They only play when the gates actually change: repeating a command for the current state or reloading the config won't replay them. Startup doesn't replay them either, though a missed daily roll will still run after startup.
 
 ## Install
 
@@ -24,19 +33,21 @@ Requires **Paper 26.2** and **Java 25**.
 
 Keep the `plugins/NetherChance/` folder when upgrading. It holds your settings and saved gate state.
 
-## Commands
+## Basic commands
 
-Use `/netherchance` or the shorter `/nchance`.
+Type `/netherchance` in chat to check whether the Nether is open and when the daily roll happens. Every command also works with the shorter `/nchance` alias.
 
 | Command | What it does |
 | --- | --- |
-| `/nchance status` | Shows the current state and daily schedule. Also the default when no command is given. |
-| `/nchance open` | Opens the gates. |
-| `/nchance close` | Closes the gates. |
-| `/nchance roll` | Makes an extra roll without using up the daily one. |
-| `/nchance reload` | Reloads the configuration. |
+| `/netherchance` or `/netherchance status` | Shows the current state and daily schedule. |
+| `/netherchance open` | Opens the gates immediately. |
+| `/netherchance close` | Closes the gates immediately. |
+| `/netherchance roll` | Makes an extra roll without using up the daily one. It can leave the gates unchanged. |
+| `/netherchance reload` | Applies changes you've made to the configuration. |
 
 Status is available to everyone by default. The other commands require operator status or the `netherchance.admin` permission.
+
+For example, `/nchance close` closes the Nether now, while `/nchance open` reopens it. The regular daily schedule continues either way.
 
 ## Configuration
 
